@@ -1,9 +1,9 @@
 import re
 import time
+from pywebgo import utils
 from .data import DataHandler
-from selenium import webdriver
 from .elements import ElementsHandler
-from webcontrol import utils as utils
+from selenium import webdriver
 from selenium.common import NoSuchElementException
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.ui import WebDriverWait
