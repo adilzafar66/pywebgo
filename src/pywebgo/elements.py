@@ -1,4 +1,4 @@
-from webcontrol import utils as utils
+from pywebgo import utils
 from typing import Callable
 from selenium.webdriver.remote.webelement import WebElement
 
