@@ -26,7 +26,7 @@ class WebController(webdriver.Chrome):
     - :class:`DataHandler` data_handler --> instance of DataHandler class to manage data associated with the elements
     """
 
-    def __init__(self, urls: list, teardown: bool = True, wait: float = 0):
+    def __init__(self, urls: list, teardown: bool = True, wait: float = 0, options: list = None):
         """
         Initialize a new instance of the WebController class.
 
@@ -34,7 +34,13 @@ class WebController(webdriver.Chrome):
         :param teardown: closes the browser after execution if true
         :param wait: time delay for executing each action
         """
-        super(WebController, self).__init__()
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_experimental_option("excludeSwitches", ["disable-popup-blocking"])
+        if options:
+            for option in options:
+                chrome_options.add_argument(option)
+
+        super(WebController, self).__init__(chrome_options=chrome_options)
 
         # ---- Private Variables ----- #
         self.urls = urls
