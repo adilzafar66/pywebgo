@@ -9,6 +9,7 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.common.exceptions import NoAlertPresentException
 from selenium.webdriver.common.action_chains import ActionChains
 
 
@@ -26,7 +27,8 @@ class WebController(webdriver.Chrome):
     - :class:`DataHandler` data_handler --> instance of DataHandler class to manage data associated with the elements
     """
 
-    def __init__(self, urls: list, teardown: bool = True, wait: float = 0, options: list = None):
+    def __init__(self, urls: list, teardown: bool = True, wait: float = 0,
+                 options: list = None, retry_attempts: int = 1):
         """
         Initialize a new instance of the WebController class.
 
@@ -46,6 +48,7 @@ class WebController(webdriver.Chrome):
         self.urls = urls
         self.wait = wait
         self.teardown = teardown
+        self.retry_attempts = retry_attempts
         self.elem_handler = ElementsHandler()
         self.data_handler = DataHandler()
 
@@ -136,6 +139,8 @@ class WebController(webdriver.Chrome):
             self.retrieve_data(web_element, element)
             self.execute_actions(web_element, element)
             self.load_next_page(index)
+            # Handle alert if appears after any action
+            self.handle_alert(element, web_element)
 
     def get_active_element(self, timeout):
         """
@@ -164,10 +169,17 @@ class WebController(webdriver.Chrome):
         # Get element identifiers
         identifiers = utils.get_element_identifiers(element)
         strategy, locator, index = identifiers.values()
-        self.wait_for_element_load(element, timeout)
-        if index:
-            return self.find_elements(strategy, locator)[int(index)]
-        return self.find_element(strategy, locator)
+        retry_count = 0
+        while retry_count <= self.retry_attempts:
+            try:
+                self.wait_for_element_load(element, timeout)
+                if index:
+                    return self.find_elements(strategy, locator)[int(index)]
+                return self.find_element(strategy, locator)
+            except NoSuchElementException:
+                retry_count += 1
+                time.sleep(1)  # Wait for a second before retrying
+        raise NoSuchElementException(f"Element not found after {self.retry_attempts} attempts.")
 
     def get_page_html(self, url: str = None) -> str:
         """
@@ -179,6 +191,18 @@ class WebController(webdriver.Chrome):
         if url:
             self.load_page(url)
         return self.page_source
+
+    def handle_alert(self, element, web_element) -> None:
+        """
+        Handle any alert that may be present on the page.
+        """
+        try:
+            alert = self.switch_to.alert
+            alert.accept()
+            # Retry the last operation
+            self.execute_actions(web_element, element)
+        except NoAlertPresentException:
+            pass
 
     def load_page(self, url: str) -> None:
         """
@@ -282,6 +306,9 @@ class WebController(webdriver.Chrome):
         :param element: dictionary containing element specifications
         :return: true if the action is delayed
         """
+        if 'wait' not in element:
+            return False
+
         if element['wait']:
             time.sleep(element['wait'])
             return True
