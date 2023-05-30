@@ -265,15 +265,14 @@ class WebController(webdriver.Chrome):
             'location': web_element.location,
             'accessible-name': web_element.accessible_name
         }
-        element_data = utils.match_label(retrieve, retrieve_options)
         attribute = re.search('^attr', element['retrieve'])
-
         if attribute:
-            self.get_element_attribute(element, web_element)
+            element_data = self.get_element_attribute(element, web_element)
+        else:
+            element_data = utils.match_label(retrieve, retrieve_options)
 
-        if element_data:
-            index = self.elem_handler.elements.index(element)
-            self.data_handler.add_data(index, element['retrieve'], element_data)
+        index = self.elem_handler.elements.index(element)
+        self.data_handler.add_data(index, element['retrieve'], element_data)
 
     @staticmethod
     def get_element_attribute(element: dict, web_element: WebElement) -> str:
