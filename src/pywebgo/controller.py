@@ -9,8 +9,8 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.common.exceptions import NoAlertPresentException
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import NoAlertPresentException, NoSuchWindowException
 
 
 class WebController(webdriver.Chrome):
@@ -201,7 +201,7 @@ class WebController(webdriver.Chrome):
             alert.accept()
             # Retry the last operation
             self.execute_actions(web_element, element)
-        except NoAlertPresentException:
+        except (NoAlertPresentException, NoSuchWindowException):
             pass
 
     def load_page(self, url: str) -> None:
