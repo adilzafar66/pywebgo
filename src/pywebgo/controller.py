@@ -28,7 +28,7 @@ class WebController(webdriver.Chrome):
     """
 
     def __init__(self, urls: list, teardown: bool = True, wait: float = 0,
-                 options: list = None, retry_attempts: int = 1):
+                 options: list = None, retry_attempts: int = 1, detach: bool = False):
         """
         Initialize a new instance of the WebController class.
 
@@ -38,6 +38,7 @@ class WebController(webdriver.Chrome):
         """
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_experimental_option("excludeSwitches", ["disable-popup-blocking"])
+        chrome_options.add_experimental_option("detach", detach)
         if options:
             for option in options:
                 chrome_options.add_argument(option)
