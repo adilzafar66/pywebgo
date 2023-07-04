@@ -135,7 +135,7 @@ class WebController(webdriver.Chrome):
             if callable(element['custom']):
                 element['custom'](self, element)
                 continue
-            web_element = self.get_element(element, timeout)
+            web_element = self.get_element(element, self.retry_attempts, timeout)
             self.elem_handler.store_web_element(web_element)
             self.retrieve_data(web_element, element)
             self.execute_actions(web_element, element)
@@ -154,12 +154,13 @@ class WebController(webdriver.Chrome):
         self.wait_for_element_visibility(active_element, timeout)
         return active_element
 
-    def get_element(self, element: dict, timeout: float) -> WebElement:
+    def get_element(self, element: dict, retry: int, timeout: float) -> WebElement:
         """
         Get the WebElement from the given element dict using the 'loc' and 'value' keys
 
-        :param timeout: time before throwing exception if the element is not found
         :param element: a dictionary containing WebElement specifications
+        :param retry: the number of retry attempts to get an element
+        :param timeout: time before throwing exception if the element is not found
         :return: a WebElement corresponding to the given element dict
         """
 
@@ -170,17 +171,16 @@ class WebController(webdriver.Chrome):
         # Get element identifiers
         identifiers = utils.get_element_identifiers(element)
         strategy, locator, index = identifiers.values()
-        retry_count = 0
-        while retry_count <= self.retry_attempts:
+
+        for i in range(retry + 1):
             try:
                 self.wait_for_element_load(element, timeout)
                 if index:
                     return self.find_elements(strategy, locator)[int(index)]
                 return self.find_element(strategy, locator)
             except NoSuchElementException:
-                retry_count += 1
                 time.sleep(1)  # Wait for a second before retrying
-        raise NoSuchElementException(f"Element not found after {self.retry_attempts} attempts.")
+        raise NoSuchElementException(f"Element not found after {retry} attempts.")
 
     def get_page_html(self, url: str = None) -> str:
         """
@@ -347,22 +347,20 @@ class WebController(webdriver.Chrome):
             (strategy, locator) = (identifiers['strategy'], identifiers['locator'])
             wait.until(expected_conditions.visibility_of_element_located((strategy, locator)))
 
-    def element_exists(self, element, wait=0) -> bool:
+    def element_exists(self, element, retry=0, timeout=0) -> bool:
         """
         Check if an element exists.
 
         :param element: dictionary containing element specifications
-        :param wait:
-        :return:
+        :param retry: the number of retry attempts to find an element
+        :param timeout: wait time before throwing an exception
+        :return: bool flag to assert the existence of an element
         """
         try:
-            identifiers = utils.get_element_identifiers(element)
-            (strategy, locator) = (identifiers['strategy'], identifiers['locator'])
-            time.sleep(wait)
-            self.find_element(strategy, locator)
+            self.get_element(element, retry, timeout)
+            return True
         except NoSuchElementException:
             return False
-        return True
 
     def run_controller(self, elements: list, timeout: float = 20) -> None:
         """
