@@ -27,12 +27,13 @@ class WebController(webdriver.Chrome):
     - :class:`DataHandler` data_handler --> instance of DataHandler class to manage data associated with the elements
     """
 
-    def __init__(self, urls: list, teardown: bool = True, wait: float = 0,
+    def __init__(self, urls: list, timeout: float, teardown: bool = True, wait: float = 0,
                  options: list = None, retry_attempts: int = 1, detach: bool = False):
         """
         Initialize a new instance of the WebController class.
 
         :param urls: non-linked web pages to traverse through
+        :param timeout: timeout for each operation during execution
         :param teardown: closes the browser after execution if true
         :param wait: time delay for executing each action
         """
@@ -48,6 +49,7 @@ class WebController(webdriver.Chrome):
         # ---- Private Variables ----- #
         self.urls = urls
         self.wait = wait
+        self.timeout = timeout
         self.teardown = teardown
         self.retry_attempts = retry_attempts
         self.elem_handler = ElementsHandler()
@@ -118,11 +120,10 @@ class WebController(webdriver.Chrome):
                 Select(web_element).select_by_visible_text(element['keys'])
             self.perform_action_chains(this_action, web_element)
 
-    def execute_operations(self, timeout: float = 20) -> None:
+    def execute_operations(self) -> None:
         """
         Execute all the operations associated with the current WebController object.
 
-        :param timeout: time before throwing exception if the element is not found
         """
         # Load the first url
         start_url = self.urls[0]
@@ -135,7 +136,9 @@ class WebController(webdriver.Chrome):
             if callable(element['custom']):
                 element['custom'](self, element)
                 continue
-            web_element = self.get_element(element, self.retry_attempts, timeout)
+            web_element = self.get_element(element,
+                                           self.retry_attempts,
+                                           self.timeout)
             self.elem_handler.store_web_element(web_element)
             self.retrieve_data(web_element, element)
             self.execute_actions(web_element, element)
@@ -143,7 +146,7 @@ class WebController(webdriver.Chrome):
             # Handle alert if appears after any action
             self.handle_alert(element, web_element)
 
-    def get_active_element(self, timeout):
+    def get_active_element(self, timeout: float):
         """
         Switch to and return the active web element object.
 
@@ -347,7 +350,7 @@ class WebController(webdriver.Chrome):
             (strategy, locator) = (identifiers['strategy'], identifiers['locator'])
             wait.until(expected_conditions.visibility_of_element_located((strategy, locator)))
 
-    def element_exists(self, element, retry=0, timeout=0) -> bool:
+    def element_exists(self, element: dict, retry: int, timeout: float) -> bool:
         """
         Check if an element exists.
 
@@ -362,13 +365,12 @@ class WebController(webdriver.Chrome):
         except NoSuchElementException:
             return False
 
-    def run_controller(self, elements: list, timeout: float = 20) -> None:
+    def run_controller(self, elements: list) -> None:
         """
         Runs the controller to initiate the execution of the operations.
 
-        :param timeout:
         :param elements: elements to interact with
         """
         self.create_elements(elements)
         self.elem_handler.sort_elements_by_rank()
-        self.execute_operations(timeout=timeout)
+        self.execute_operations()
