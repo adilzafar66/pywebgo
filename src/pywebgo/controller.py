@@ -4,6 +4,7 @@ from pywebgo import utils
 from .data import DataHandler
 from .elements import ElementsHandler
 from selenium import webdriver
+import chromedriver_autoinstaller
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
@@ -37,6 +38,7 @@ class WebController(webdriver.Chrome):
         :param teardown: closes the browser after execution if true
         :param wait: time delay for executing each action
         """
+        chromedriver_autoinstaller.install()
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_experimental_option("excludeSwitches", ["disable-popup-blocking"])
         chrome_options.add_experimental_option("detach", detach)
