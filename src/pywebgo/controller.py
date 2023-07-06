@@ -4,12 +4,12 @@ from pywebgo import utils
 from .data import DataHandler
 from .elements import ElementsHandler
 from selenium import webdriver
-from selenium.common import NoSuchElementException
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common import NoSuchElementException, TimeoutException
 from selenium.common.exceptions import NoAlertPresentException, NoSuchWindowException
 
 
@@ -28,7 +28,7 @@ class WebController(webdriver.Chrome):
     """
 
     def __init__(self, urls: list, timeout: float, teardown: bool = True, wait: float = 0,
-                 options: list = None, retry_attempts: int = 1, detach: bool = False):
+                 options: list = None, retry_attempts: int = 0, detach: bool = False):
         """
         Initialize a new instance of the WebController class.
 
@@ -365,7 +365,7 @@ class WebController(webdriver.Chrome):
         try:
             self.get_element(element, retry, timeout)
             return True
-        except NoSuchElementException:
+        except (NoSuchElementException, TimeoutException):
             return False
 
     def run_controller(self, elements: list) -> None:
