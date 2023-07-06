@@ -196,9 +196,12 @@ class WebController(webdriver.Chrome):
             self.load_page(url)
         return self.page_source
 
-    def handle_alert(self, element, web_element) -> None:
+    def handle_alert(self, element: dict, web_element: WebElement) -> None:
         """
         Handle any alert that may be present on the page.
+
+        :param element: a dictionary containing WebElement specifications
+        :param web_element: element to perform action on after handling alert
         """
         try:
             alert = self.switch_to.alert
