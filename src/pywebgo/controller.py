@@ -183,8 +183,8 @@ class WebController(webdriver.Chrome):
                 if index:
                     return self.find_elements(strategy, locator)[int(index)]
                 return self.find_element(strategy, locator)
-            except NoSuchElementException:
-                time.sleep(1)  # Wait for a second before retrying
+            except (NoSuchElementException, TimeoutException):
+                continue
         raise NoSuchElementException(f"Element not found after {retry} attempts.")
 
     def get_page_html(self, url: str = None) -> str:
@@ -367,7 +367,7 @@ class WebController(webdriver.Chrome):
         try:
             self.get_element(element, retry, timeout)
             return True
-        except (NoSuchElementException, TimeoutException):
+        except NoSuchElementException:
             return False
 
     def run_controller(self, elements: list) -> None:
