@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pywebgo"
-version = "0.0.11"
+version = "0.0.12"
 authors = [
   { name="Adil Zafar Khan", email="adilzafar66@gmail.com" },
 ]
